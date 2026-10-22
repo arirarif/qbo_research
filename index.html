@@ -27,7 +27,10 @@ body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 Inter,"Noto Sa
 header.top{position:sticky;top:0;z-index:5;background:var(--panel);border-bottom:1px solid var(--line);padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 header.top h1{font-size:17px;margin:0;font-weight:700;letter-spacing:-.01em}
 header.top .sub{color:var(--muted);font-size:13px}
-header.top button{margin-left:auto;background:var(--soft);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font:inherit;font-size:13px;cursor:pointer}
+header.top a.hbtn{margin-left:auto;background:var(--accent);color:var(--accent-ink);border-radius:8px;padding:6px 12px;font-size:13px;font-weight:600;text-decoration:none}
+nav.side a.sim,.toc-mobile a.sim{background:var(--accent);color:var(--accent-ink);font-weight:600;margin-bottom:8px}
+nav.side a.sim .n{color:var(--accent-ink)}
+header.top button{background:var(--soft);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font:inherit;font-size:13px;cursor:pointer}
 .layout{display:grid;grid-template-columns:260px minmax(0,1fr);gap:0;max-width:1280px;margin:0 auto}
 nav.side{position:sticky;top:57px;align-self:start;height:calc(100vh - 57px);overflow:auto;padding:16px;border-right:1px solid var(--line)}
 nav.side a{display:flex;gap:10px;align-items:baseline;color:var(--ink);text-decoration:none;padding:7px 10px;border-radius:8px;font-size:14px}
@@ -72,12 +75,13 @@ hr{border:0;border-top:1px solid var(--line);margin:22px 0}
 <body>
 <header class="top">
   <div><h1>Business Launch Plan</h1><div class="sub">Accounting training · agency · placement — compiled 22 Oct 2026 from <code>01_business-launch/</code></div></div>
+  <a class="hbtn" href="12-simulator.html">▶ Simulator</a>
   <button id="theme" type="button">Theme</button>
 </header>
 <div class="layout">
-  <nav class="side"><a href='#00-README'><span class='n'>00</span>Index</a><a href='#10-mentor-letter'><span class='n'>10</span>Mentor&#x27;s Letter</a><a href='#01-what-we-have'><span class='n'>01</span>What We Have</a><a href='#02-analysis'><span class='n'>02</span>Analysis</a><a href='#03-business-model-and-phases'><span class='n'>03</span>Business Model &amp; Phases</a><a href='#04-rebranding-strategy'><span class='n'>04</span>Rebranding Strategy</a><a href='#05-marketing-plan'><span class='n'>05</span>Marketing Plan</a><a href='#06-growth-and-business-policy'><span class='n'>06</span>Growth &amp; Business Policy</a><a href='#07-90-day-action-plan'><span class='n'>07</span>90-Day Action Plan</a><a href='#08-open-questions'><span class='n'>08</span>Open Questions</a><a href='#09-sources'><span class='n'>09</span>Sources</a><a href='#99-hamidur-links-whatsapp-2026-10-16'><span class='n'>99</span>Raw Links (WhatsApp)</a></nav>
+  <nav class="side"><a class="sim" href="12-simulator.html"><span class="n">▶</span>Open the Simulator (digital twin)</a><a href='#00-README'><span class='n'>00</span>Index</a><a href='#10-mentor-letter'><span class='n'>10</span>Mentor&#x27;s Letter</a><a href='#01-what-we-have'><span class='n'>01</span>What We Have</a><a href='#02-analysis'><span class='n'>02</span>Analysis</a><a href='#03-business-model-and-phases'><span class='n'>03</span>Business Model &amp; Phases</a><a href='#04-rebranding-strategy'><span class='n'>04</span>Rebranding Strategy</a><a href='#05-marketing-plan'><span class='n'>05</span>Marketing Plan</a><a href='#06-growth-and-business-policy'><span class='n'>06</span>Growth &amp; Business Policy</a><a href='#07-90-day-action-plan'><span class='n'>07</span>90-Day Action Plan</a><a href='#08-open-questions'><span class='n'>08</span>Open Questions</a><a href='#09-sources'><span class='n'>09</span>Sources</a><a href='#99-hamidur-links-whatsapp-2026-10-16'><span class='n'>99</span>Raw Links (WhatsApp)</a></nav>
   <main>
-    <div class="toc-mobile"><a href='#00-README'><span class='n'>00</span>Index</a><a href='#10-mentor-letter'><span class='n'>10</span>Mentor&#x27;s Letter</a><a href='#01-what-we-have'><span class='n'>01</span>What We Have</a><a href='#02-analysis'><span class='n'>02</span>Analysis</a><a href='#03-business-model-and-phases'><span class='n'>03</span>Business Model &amp; Phases</a><a href='#04-rebranding-strategy'><span class='n'>04</span>Rebranding Strategy</a><a href='#05-marketing-plan'><span class='n'>05</span>Marketing Plan</a><a href='#06-growth-and-business-policy'><span class='n'>06</span>Growth &amp; Business Policy</a><a href='#07-90-day-action-plan'><span class='n'>07</span>90-Day Action Plan</a><a href='#08-open-questions'><span class='n'>08</span>Open Questions</a><a href='#09-sources'><span class='n'>09</span>Sources</a><a href='#99-hamidur-links-whatsapp-2026-10-16'><span class='n'>99</span>Raw Links (WhatsApp)</a></div>
+    <div class="toc-mobile"><a class="sim" href="12-simulator.html">▶ Open the Simulator (digital twin)</a><br><a href='#00-README'><span class='n'>00</span>Index</a><a href='#10-mentor-letter'><span class='n'>10</span>Mentor&#x27;s Letter</a><a href='#01-what-we-have'><span class='n'>01</span>What We Have</a><a href='#02-analysis'><span class='n'>02</span>Analysis</a><a href='#03-business-model-and-phases'><span class='n'>03</span>Business Model &amp; Phases</a><a href='#04-rebranding-strategy'><span class='n'>04</span>Rebranding Strategy</a><a href='#05-marketing-plan'><span class='n'>05</span>Marketing Plan</a><a href='#06-growth-and-business-policy'><span class='n'>06</span>Growth &amp; Business Policy</a><a href='#07-90-day-action-plan'><span class='n'>07</span>90-Day Action Plan</a><a href='#08-open-questions'><span class='n'>08</span>Open Questions</a><a href='#09-sources'><span class='n'>09</span>Sources</a><a href='#99-hamidur-links-whatsapp-2026-10-16'><span class='n'>99</span>Raw Links (WhatsApp)</a></div>
     <section id='00-README' class='doc'><div class='doc-tag'>00-README.md</div><h1 id="01-business-launch-accounting-training-marketplace-placement">01 — Business Launch: Accounting Training + Marketplace + Placement</h1>
 <p>Created: 22 Oct 2026. Builds on <code>../research/</code> (market research, 3 Oct 2026; start with <code>../research/14-final-verdict.md</code>) and on <code>C:\Users\arira\Desktop\fiverr\300_noman-quickbooks\</code> (Noman's Upwork/Fiverr/LinkedIn build, Aug 2026).</p>
 <h2 id="who-is-who">Who is who</h2>
@@ -168,9 +172,9 @@ hr{border:0;border-top:1px solid var(--line);margin:22px 0}
 <td><strong>Read this first.</strong> Order of operations, what to say no to, how to know it works</td>
 </tr>
 <tr>
-<td>11</td>
-<td><a href="11-report.html">11-report.html</a></td>
-<td>All of files 00–10 and 99 as one navigable HTML report (open in a browser)</td>
+<td>—</td>
+<td><a href="index.html">index.html</a></td>
+<td><strong>Open this in a browser.</strong> All of files 00–10 and 99 as one navigable HTML report, with a button to the simulator</td>
 </tr>
 <tr>
 <td>12</td>

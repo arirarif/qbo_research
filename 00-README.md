@@ -22,7 +22,7 @@ Created: 22 Oct 2026. Builds on `../research/` (market research, 3 Oct 2026; sta
 | 08 | [08-open-questions.md](08-open-questions.md) | Questions for Hamidur, Noman and the team that change the plan |
 | 09 | [09-sources.md](09-sources.md) | Every link and number used |
 | 10 | [10-mentor-letter.md](10-mentor-letter.md) | **Read this first.** Order of operations, what to say no to, how to know it works |
-| 11 | [11-report.html](11-report.html) | All of files 00–10 and 99 as one navigable HTML report (open in a browser) |
+| — | [index.html](index.html) | **Open this in a browser.** All of files 00–10 and 99 as one navigable HTML report, with a button to the simulator |
 | 12 | [12-simulator.html](12-simulator.html) | **Digital twin**: change any assumption, watch 36 months of students, clients, people working, cash; stage gates, sensitivity, Monte Carlo stress test |
 | 99 | [99-hamidur-links-whatsapp-2026-10-16.md](99-hamidur-links-whatsapp-2026-10-16.md) | The raw links he sent |
 
