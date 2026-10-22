@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Business Simulator</title>
+<meta name="description" content="Digital twin of the accounting academy + agency + placement venture: change any assumption and watch 36 months of students, clients, people working and cash. Includes stage gates and Monte Carlo stress testing.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f5f1; --panel:#fff; --ink:#1b2430; --muted:#5f6b78; --line:#e2dfd7; --soft:#edf3f4;
+  --academy:#0f7f8c; --agency:#2b4c8c; --placement:#c47a1c; --cash:#2e8b57; --neg:#c0392b; --grid:#e6e3db;
+  --accent:#0f5f6b; --accent-ink:#fff;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0f1317; --panel:#161b21; --ink:#e7e9ec; --muted:#9aa4ae; --line:#2a323b; --soft:#1b2429;
+  --academy:#4fc3cf; --agency:#7fa3ef; --placement:#f0b35a; --cash:#6fd39a; --neg:#ff7b6b; --grid:#262d35;
+  --accent:#5fc3cf; --accent-ink:#0f1317;
+}}
+:root[data-theme="dark"]{
+  --bg:#0f1317; --panel:#161b21; --ink:#e7e9ec; --muted:#9aa4ae; --line:#2a323b; --soft:#1b2429;
+  --academy:#4fc3cf; --agency:#7fa3ef; --placement:#f0b35a; --cash:#6fd39a; --neg:#ff7b6b; --grid:#262d35;
+  --accent:#5fc3cf; --accent-ink:#0f1317;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Inter,system-ui,sans-serif}
+header{position:sticky;top:0;z-index:5;background:var(--panel);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+header h1{font-size:17px;margin:0}
+header .sub{font-size:12.5px;color:var(--muted)}
+header .right{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+button{background:var(--soft);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font:inherit;font-size:13px;cursor:pointer}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button.active{outline:2px solid var(--accent)}
+.layout{display:grid;grid-template-columns:330px minmax(0,1fr);max-width:1400px;margin:0 auto}
+aside{border-right:1px solid var(--line);padding:12px;position:sticky;top:53px;height:calc(100vh - 53px);overflow:auto}
+main{padding:16px;min-width:0}
+details{border:1px solid var(--line);border-radius:10px;margin:0 0 8px;background:var(--panel)}
+summary{cursor:pointer;padding:8px 10px;font-weight:600;font-size:13.5px}
+.field{display:grid;grid-template-columns:1fr 92px;gap:8px;align-items:center;padding:4px 10px}
+.field label{font-size:12.5px;color:var(--ink)}
+.field small{display:block;color:var(--muted);font-size:11px}
+.field input{width:100%;font:13px JetBrains Mono,monospace;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:0 0 14px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.tile .k{font-size:11.5px;color:var(--muted)}
+.tile .v{font:600 20px/1.2 Inter;margin-top:2px}
+.tile .v.bad{color:var(--neg)} .tile .v.good{color:var(--cash)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:0 0 14px}
+.card h2{font-size:15px;margin:0 0 6px}
+.card p.note{font-size:12.5px;color:var(--muted);margin:0 0 8px}
+svg{width:100%;height:auto;display:block}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:4px 0 0}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:middle}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th,td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--muted);font-weight:600}
+.tblwrap{overflow:auto}
+.ok{color:var(--cash);font-weight:600}.fail{color:var(--neg);font-weight:600}
+.presets{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:980px){.layout{grid-template-columns:1fr}aside{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line)}.grid2{grid-template-columns:1fr}}
+.mc{font:13px JetBrains Mono,monospace}
+.small{font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>Business Simulator (digital twin)</h1><div class="sub">Academy + Agency + Placement, month by month. Defaults come from the research folder and file 03. Change anything; everything recalculates.</div></div>
+  <div class="right">
+    <button id="btnSave">Save my scenario</button>
+    <button id="btnReset">Reset to Base</button>
+    <button id="btnExport">Copy JSON</button>
+    <button id="btnTheme">Theme</button>
+  </div>
+</header>
+<div class="layout">
+<aside id="inputs">
+  <div class="presets" id="presets"></div>
+</aside>
+<main>
+  <div class="tiles" id="tiles"></div>
+  <div class="card"><h2>Stage gates (from file 06, Part A)</h2><div class="tblwrap"><table id="gates"></table></div></div>
+  <div class="grid2">
+    <div class="card"><h2>Cash balance (Tk)</h2><p class="note">Starting cash plus every month's net. The low point is the money you must have.</p><div id="chCash"></div></div>
+    <div class="card"><h2>Monthly revenue by engine (Tk)</h2><p class="note">Academy fees, agency (USD converted), placement fees.</p><div id="chRev"></div><div class="legend"><span><i style="background:var(--academy)"></i>Academy</span><span><i style="background:var(--agency)"></i>Agency</span><span><i style="background:var(--placement)"></i>Placement</span></div></div>
+    <div class="card"><h2>People working through us (cumulative)</h2><p class="note">Agency juniors from our cohorts + placed in partner firms + freelancing with income + local jobs.</p><div id="chPeople"></div><div class="legend"><span><i style="background:var(--agency)"></i>Agency staff</span><span><i style="background:var(--placement)"></i>Placed</span><span><i style="background:var(--academy)"></i>Freelancing</span><span><i style="background:var(--muted)"></i>Local job</span></div></div>
+    <div class="card"><h2>Clients and seats</h2><p class="note">SME clients (Upwork/Fiverr/direct) and firm seats from outbound.</p><div id="chClients"></div><div class="legend"><span><i style="background:var(--agency)"></i>SME clients</span><span><i style="background:var(--placement)"></i>Seats</span></div></div>
+  </div>
+  <div class="card"><h2>What moves the outcome (sensitivity)</h2><p class="note">Each assumption moved ±20% on its own, everything else at your inputs. Sorted by how much it changes "people working at month 12". Work on the top rows first.</p><div class="tblwrap"><table id="sens"></table></div></div>
+  <div class="card"><h2>Batch funnel</h2><p class="note">What each batch's ad spend turns into. CAC = ad spend ÷ paid students.</p><div class="tblwrap"><table id="batches"></table></div></div>
+  <div class="card"><h2>Monthly ledger</h2><div class="tblwrap"><table id="ledger"></table></div></div>
+  <div class="card">
+    <h2>Stress test (Monte Carlo)</h2>
+    <p class="note">Runs the model many times with every rate varied randomly around your inputs (uniform ± the spread you set). Tells you how likely the plan is to survive, not just what the average says.</p>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+      <label class="small">Runs <input id="mcRuns" type="number" value="400" min="50" max="3000" style="width:80px"></label>
+      <label class="small">Spread ± <input id="mcSpread" type="number" value="30" min="5" max="80" style="width:60px">%</label>
+      <button class="primary" id="btnMC">Run stress test</button>
+    </div>
+    <div id="mcOut" class="mc"></div>
+    <div id="chMC"></div>
+  </div>
+  <div class="card">
+    <h2>How the model works (read once)</h2>
+    <ul class="small">
+      <li><b>Academy.</b> Each batch: ad spend ÷ cost per registration = registrations, plus organic registrations that grow with every batch. Registrations → test takers → passers → paid (capped by batch size). Fees collected 60% at enrolment, 40% a month later. Costs: ads the month before, instructor hours and tools during the 2-month batch. Finishers = paid × finish rate. Phase 2 takes a share of finishers (capped), charges its fee to the paying half.</li>
+      <li><b>Agency.</b> SME clients arrive from Upwork/Fiverr at a monthly rate after a ramp; each pays a monthly amount in USD, minus platform fee; churn monthly. Seat clients come from outbound: contacts per month ÷ contacts-per-client, with a lag; each buys N seats at the seat price. Founders deliver the first few clients themselves; beyond that, juniors are needed (SME clients per junior, 1 junior per seat) and a reviewer per 6 juniors.</li>
+      <li><b>Placement.</b> Juniors are hired first from the Phase 2 pool. Partner firms sign at a quarterly rate (capped) and each hires a yearly number from the pool at a placement fee. Remaining Phase 2 completers freelance with a success rate after a lag; Phase 1 finishers not in Phase 2 freelance or get local jobs at lower rates.</li>
+      <li><b>Cash.</b> Starting cash + academy + agency + placement − ads − instructor − tools − junior pay − reviewer − founder draw − fixed − one-off launch cost.</li>
+      <li><b>Gates</b> follow file 06 Part A. <b>Sources</b>: research files 10, 11, 14, 15, 17, 19, 21, 23 and file 03. Everything is an estimate; the point is to see which assumptions the plan is sensitive to.</li>
+    </ul>
+  </div>
+</main>
+</div>
+<script>
+(function(){
+'use strict';
+// ---------- parameter definitions ----------
+const GROUPS = [
+ {name:'Horizon & cash', keys:[
+  ['months','Months to simulate',36,'',''],
+  ['startCash','Starting cash (Tk)',300000,'','what the founders put in'],
+  ['launchCost','One-off launch cost (Tk, month 1)',80000,'','brand, site, gateway (file 04 §9)'],
+  ['founderDraw','Founder draw, total per month (Tk)',60000,'','0 if founders live on other income'],
+  ['fixedCosts','Fixed monthly costs (Tk)',20000,'','tools, Zoom, subscriptions, misc'],
+  ['fx','Tk per USD',122,'','research 17 uses 122'],
+ ]},
+ {name:'Academy: batches & funnel', keys:[
+  ['batchesPerYear','Batches per year',4,'','file 03: 4'],
+  ['firstBatch','First batch enrolment month',2,'','ads run the month before'],
+  ['capacity','Max paid students per batch',35,'','policy D1'],
+  ['adSpend','Ad spend per batch (Tk)',50000,'','file 05: 40–60k'],
+  ['costPerReg','Cost per registration (Tk)',150,'','target under 150'],
+  ['organicRegs','Organic registrations, batch 1',60,'','WhatsApp list, groups, YouTube'],
+  ['organicGrowth','Organic growth per batch (%)',25,'%','content compounding'],
+  ['regToTest','Registrations that take the test (%)',20,'%','estimate'],
+  ['passRate','Test pass rate (%)',60,'%','selection, policy D1'],
+  ['payRate','Passers who pay (%)',70,'%','estimate'],
+  ['fee','Regular fee (Tk)',12000,'','file 03'],
+  ['earlyShare','Share paying early-bird (%)',50,'%',''],
+  ['earlyDisc','Early-bird discount (%)',17,'%','12,000 → 10,000'],
+  ['finishRate','Finish rate (%)',80,'%','KPI target'],
+ ]},
+ {name:'Academy: costs', keys:[
+  ['instrHours','Instructor + review hours per batch',68,'','48 live + 20 review'],
+  ['instrRate','Instructor rate (Tk/hour)',1500,'',''],
+  ['toolsPerBatch','Tools per batch (Tk)',20000,'','QBO/Xero files, LMS, gateway'],
+ ]},
+ {name:'Phase 2 (Marketplace Hunting)', keys:[
+  ['p2Share','Finishers invited to Phase 2 (%)',40,'%','top by score'],
+  ['p2Cap','Phase 2 cap per cohort',15,'',''],
+  ['p2Fee','Phase 2 fee (Tk)',15000,'',''],
+  ['p2PayShare','Phase 2 who pay cash vs work agreement (%)',50,'%',''],
+  ['p2Complete','Phase 2 completion (%)',90,'%',''],
+  ['p2Cost','Phase 2 mentoring cost per cohort (Tk)',45000,'','30 h × 1,500'],
+ ]},
+ {name:'Agency: SME clients (Upwork/Fiverr/direct)', keys:[
+  ['smeRampMonths','Ramp months before full rate',3,'','zero-review profile'],
+  ['smeRampRate','New SME clients/month during ramp',0.5,'',''],
+  ['smeRate','New SME clients/month after ramp',1.2,'','research 17: 8–10 by month 12'],
+  ['smeCap','Max SME clients the team can win',30,'','sales capacity ceiling'],
+  ['smeRev','Revenue per SME client (USD/month)',350,'','$3,500 / 10 clients'],
+  ['platformFee','Platform fee on SME revenue (%)',10,'','Upwork'],
+  ['smeChurn','SME churn per month (%)',4,'%','clients stay years'],
+  ['smePerJunior','SME clients one junior can carry',4,'',''],
+  ['founderSme','SME clients founders deliver themselves',6,'','before hiring'],
+ ]},
+ {name:'Agency: firm seats (outbound)', keys:[
+  ['outStart','Outbound starts month',3,'','after brand is live'],
+  ['contacts','Contacts per month (LinkedIn + email)',1500,'','research 19'],
+  ['contactsPerClient','Contacts needed per seat client',8000,'','research 19: 6,000–10,000'],
+  ['outLag','Lag from contact to contract (months)',3,'',''],
+  ['seatsPerClient','Seats per firm client',2,'',''],
+  ['seatPrice','Seat price (USD/month)',800,'','research 14: 600–1,000'],
+  ['seatChurn','Seat client churn per month (%)',3,'%',''],
+  ['founderSeats','Seats founders can cover themselves',1,'',''],
+ ]},
+ {name:'Agency: staffing', keys:[
+  ['juniorPay','Junior pay (Tk/month)',22000,'','research 10: 18–35k'],
+  ['reviewerPay','Reviewer pay (Tk/month)',50000,'','1 per 6 juniors'],
+  ['externalHire','Hire externally if student pool empty (1=yes,0=no)',1,'',''],
+ ]},
+ {name:'Placement', keys:[
+  ['firmsPerQuarter','Partner firms signed per quarter',1,'','from month 3'],
+  ['firmsCap','Max partner firms',10,'',''],
+  ['hiresPerFirm','Hires per firm per year',3,'','research 10'],
+  ['placementFee','Placement fee (Tk)',30000,'','policy D7'],
+  ['freelanceP2','Phase 2 completers freelancing with income (%)',25,'%','research 11: LEDP ~20%'],
+  ['freelanceP1','Phase 1-only finishers freelancing (%)',8,'%',''],
+  ['localJob','Phase 1-only finishers getting a local job (%)',15,'%','Tally module'],
+  ['outcomeLag','Months until freelance/local outcome shows',3,'',''],
+  ['attrition','Monthly attrition of people working (%)',1.5,'%',''],
+ ]},
+];
+const DEFAULTS = {}; GROUPS.forEach(g=>g.keys.forEach(k=>DEFAULTS[k[0]]=k[2]));
+const PRESETS = {
+  'Base (research)': {},
+  'Conservative': {costPerReg:250, regToTest:15, payRate:60, finishRate:70, smeRate:0.7, contactsPerClient:12000, freelanceP2:15, firmsPerQuarter:0.5, organicGrowth:10},
+  'Optimistic': {costPerReg:110, regToTest:25, payRate:80, finishRate:85, smeRate:2, contactsPerClient:6000, seatsPerClient:3, freelanceP2:35, firmsPerQuarter:2, organicGrowth:40},
+  'Course only (what competitors do)': {smeRate:0, smeRampRate:0, contacts:0, firmsPerQuarter:0, p2Share:0, freelanceP1:10, localJob:12},
+  'Agency first, no course yr 1': {firstBatch:13, smeRate:1.5, contacts:2500},
+};
+let P = Object.assign({}, DEFAULTS);
+
+// ---------- model ----------
+function simulate(p){
+  const M = Math.max(6, Math.min(72, Math.round(p.months)));
+  const pct = x=>x/100;
+  const rows=[]; const batches=[];
+  const spacing = 12/Math.max(1,p.batchesPerYear);
+  // schedule batches: enrolment month e, classes e..e+1, finish at e+1, phase2 at e+2..e+3
+  const batchStarts=[]; for(let k=0;;k++){ const e=Math.round(p.firstBatch + k*spacing); if(e>M) break; batchStarts.push(e); }
+  // per-month accumulators
+  const acadRev=new Array(M+2).fill(0), acadCost=new Array(M+2).fill(0), adCost=new Array(M+2).fill(0);
+  const finishersAt=new Array(M+4).fill(0), p2CompleteAt=new Array(M+4).fill(0), p1OnlyAt=new Array(M+4).fill(0);
+  let cumPaid=0, cumAds=0;
+  batchStarts.forEach((e,idx)=>{
+    const organic = p.organicRegs*Math.pow(1+pct(p.organicGrowth), idx);
+    const regs = (p.costPerReg>0? p.adSpend/p.costPerReg:0) + organic;
+    const testers = regs*pct(p.regToTest);
+    const passers = testers*pct(p.passRate);
+    const paid = Math.min(p.capacity, passers*pct(p.payRate));
+    const avgFee = p.fee*(1 - pct(p.earlyShare)*pct(p.earlyDisc));
+    const rev = paid*avgFee;
+    const cost = p.instrHours*p.instrRate + p.toolsPerBatch;
+    const finishers = paid*pct(p.finishRate);
+    const p2 = Math.min(p.p2Cap, finishers*pct(p.p2Share));
+    const p2Rev = p2*pct(p.p2PayShare)*p.p2Fee;
+    const p2Done = p2*pct(p.p2Complete);
+    if(e-1>=1) adCost[e-1]+=p.adSpend; else adCost[1]+=p.adSpend;
+    acadRev[e]+=rev*0.6; if(e+1<=M) acadRev[e+1]+=rev*0.4;
+    acadCost[e]+=cost/2; if(e+1<=M) acadCost[e+1]+=cost/2;
+    if(e+1<=M) finishersAt[e+1]+=finishers;
+    if(e+2<=M){ acadRev[e+2]+=p2Rev; acadCost[e+2]+=p.p2Cost; }
+    if(e+3<=M){ p2CompleteAt[e+3]+=p2Done; }
+    if(e+1<=M){ p1OnlyAt[e+1]+=Math.max(0,finishers-p2); }
+    cumPaid+=paid; cumAds+=p.adSpend;
+    batches.push({n:idx+1, month:e, regs, testers, passers, paid, rev, finishers, p2, p2Done, cac: paid>0? p.adSpend/paid: null});
+  });
+  // agency + placement state
+  let sme=0, seats=0, pool=0, juniorsStudents=0, juniorsExternal=0, placed=0, freelancing=0, localJobs=0, firms=0, cash=p.startCash;
+  let minCash=cash, minCashMonth=0, breakEven=null;
+  const pendingSeatClients=new Array(M+p.outLag+2).fill(0);
+  const pendingFreelance=new Array(M+p.outcomeLag+2).fill(0), pendingLocal=new Array(M+p.outcomeLag+2).fill(0);
+  let firstClientsMonth=null, firstSeatMonth=null;
+  let cumPlacementRev=0, cumAgencyRev=0, cumAcadRev=0;
+  for(let m=1;m<=M;m++){
+    // SME clients
+    const rate = m<=p.smeRampMonths? p.smeRampRate : p.smeRate;
+    sme = Math.min(p.smeCap, sme*(1-pct(p.smeChurn)) + rate);
+    // outbound → seat clients
+    if(m>=p.outStart && p.contactsPerClient>0){ const newClients = p.contacts/p.contactsPerClient; pendingSeatClients[m+p.outLag]+=newClients; }
+    seats = seats*(1-pct(p.seatChurn)) + (pendingSeatClients[m]||0)*p.seatsPerClient;
+    if(firstSeatMonth===null && seats>=1) firstSeatMonth=m;
+    if(firstClientsMonth===null && sme>=2) firstClientsMonth=m;
+    // students finishing / phase 2 completing
+    pool += p2CompleteAt[m]||0;
+    const p1only = p1OnlyAt[m]||0;
+    pendingFreelance[m+p.outcomeLag]+= p1only*pct(p.freelanceP1);
+    pendingLocal[m+p.outcomeLag]+= p1only*pct(p.localJob);
+    // staffing need
+    const smeNeed = Math.max(0, sme - p.founderSme)/p.smePerJunior;
+    const seatNeed = Math.max(0, seats - p.founderSeats);
+    const need = Math.ceil(smeNeed + seatNeed - 1e-9);
+    const have = juniorsStudents + juniorsExternal;
+    if(need>have){ let gap=need-have; const fromPool=Math.min(gap,pool); pool-=fromPool; juniorsStudents+=fromPool; gap-=fromPool; if(p.externalHire>=1) juniorsExternal+=gap; }
+    // partner firms and placements
+    if(m>=3 && m%3===0) firms = Math.min(p.firmsCap, firms + p.firmsPerQuarter);
+    const placeCap = firms*p.hiresPerFirm/12;
+    const placedNow = Math.min(pool, placeCap); pool-=placedNow; placed+=placedNow;
+    // remaining pool → freelancing attempts (after lag); pool drains each month
+    const tryFreelance = pool; pool=0; pendingFreelance[m+p.outcomeLag]+= tryFreelance*pct(p.freelanceP2);
+    freelancing += pendingFreelance[m]||0; localJobs += pendingLocal[m]||0;
+    // attrition
+    const a=1-pct(p.attrition); placed*=a; freelancing*=a; localJobs*=a;
+    // money
+    const agencyUSD = sme*p.smeRev*(1-pct(p.platformFee)) + seats*p.seatPrice;
+    const agencyRev = agencyUSD*p.fx;
+    const juniors = juniorsStudents+juniorsExternal;
+    const reviewers = Math.ceil(juniors/6);
+    const staffCost = juniors*p.juniorPay + reviewers*p.reviewerPay;
+    const placementRev = placedNow*p.placementFee;
+    const revenue = (acadRev[m]||0) + agencyRev + placementRev;
+    const costs = (acadCost[m]||0) + (adCost[m]||0) + staffCost + p.founderDraw + p.fixedCosts + (m===1? p.launchCost:0);
+    const net = revenue-costs; cash+=net;
+    if(cash<minCash){minCash=cash; minCashMonth=m;}
+    cumPlacementRev+=placementRev; cumAgencyRev+=agencyRev; cumAcadRev+=acadRev[m]||0;
+    const working = juniorsStudents+placed+freelancing+localJobs;
+    rows.push({m, acadRev:acadRev[m]||0, agencyRev, placementRev, revenue, ads:adCost[m]||0, acadCost:acadCost[m]||0, staffCost, founderDraw:p.founderDraw, fixed:p.fixedCosts+(m===1?p.launchCost:0), costs, net, cash, sme, seats, juniors, juniorsStudents, juniorsExternal, placed, freelancing, localJobs, working, firms, pool, finishers:finishersAt[m]||0, agencyUSD});
+  }
+  // cumulative break-even: first month after which cash never again drops below the starting cash
+  let lastBelow=0; rows.forEach(x=>{ if(x.cash<p.startCash) lastBelow=x.m; });
+  breakEven = (lastBelow<M)? lastBelow+1 : null;
+  const at = m => rows[Math.min(rows.length,m)-1];
+  // gates
+  const b1 = batches[0];
+  const earningBy = (m)=> at(m)? at(m).working:0;
+  const gates=[
+    {stage:'Stage 0 (month 3)', test:'≥2 paying clients and Batch 1 finished', pass: at(3) && at(3).sme>=2 && b1 && b1.month+1<=3, detail: at(3)? `clients ${at(3).sme.toFixed(1)}, batch 1 finishes month ${b1?b1.month+1:'—'}`:''},
+    {stage:'Stage 1 (month 9)', test:'≥10 people earning, ≥5 clients, ≥1 seat, CAC ≤ 2,500', pass: at(9) && earningBy(9)>=10 && at(9).sme>=5 && at(9).seats>=1 && (b1&&b1.cac!==null&&b1.cac<=2500), detail: at(9)? `earning ${earningBy(9).toFixed(0)}, clients ${at(9).sme.toFixed(1)}, seats ${at(9).seats.toFixed(1)}, CAC ${b1&&b1.cac?Math.round(b1.cac):'—'}`:''},
+    {stage:'Stage 2 (month 18)', test:'Agency ≥ $10k/month and ≥30 people working', pass: at(18) && at(18).agencyUSD>=10000 && earningBy(18)>=30, detail: at(18)? `agency $${Math.round(at(18).agencyUSD)}, working ${earningBy(18).toFixed(0)}`:''},
+    {stage:'Year 1 target (month 12)', test:'30–60 working, 8–10 clients, cash never below 0', pass: at(12) && earningBy(12)>=30 && at(12).sme>=8 && minCash>=0, detail: at(12)? `working ${earningBy(12).toFixed(0)}, clients ${at(12).sme.toFixed(1)}, cash low ${Math.round(minCash).toLocaleString()}`:''},
+  ];
+  return {rows, batches, gates, minCash, minCashMonth, breakEven, cumPaid, cumAds, cumAcadRev, cumAgencyRev, cumPlacementRev, M};
+}
+
+// ---------- UI: inputs ----------
+const inputsEl=document.getElementById('inputs');
+function buildInputs(){
+  GROUPS.forEach((g,gi)=>{
+    const d=document.createElement('details'); if(gi<2) d.open=true;
+    d.innerHTML=`<summary>${g.name}</summary>`;
+    g.keys.forEach(k=>{
+      const f=document.createElement('div'); f.className='field';
+      f.innerHTML=`<label>${k[1]}${k[4]?`<small>${k[4]}</small>`:''}</label><input type="number" step="any" data-key="${k[0]}" value="${P[k[0]]}">`;
+      d.appendChild(f);
+    });
+    inputsEl.appendChild(d);
+  });
+  inputsEl.addEventListener('input',e=>{ const k=e.target.dataset.key; if(!k) return; const v=parseFloat(e.target.value); if(!isNaN(v)){P[k]=v; render();} });
+  const pr=document.getElementById('presets');
+  Object.keys(PRESETS).forEach(name=>{ const b=document.createElement('button'); b.textContent=name; b.onclick=()=>{P=Object.assign({},DEFAULTS,PRESETS[name]); syncInputs(); render(); [...pr.children].forEach(c=>c.classList.remove('active')); b.classList.add('active');}; pr.appendChild(b); });
+}
+function syncInputs(){ inputsEl.querySelectorAll('input[data-key]').forEach(i=>{ i.value=P[i.dataset.key]; }); }
+
+// ---------- charts (inline SVG) ----------
+function cssVar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+function fmtK(v){ const a=Math.abs(v); if(a>=1e7) return (v/1e7).toFixed(1)+' cr'; if(a>=1e5) return (v/1e5).toFixed(1)+' L'; if(a>=1e3) return (v/1e3).toFixed(0)+'k'; return Math.round(v); }
+function lineChart(el, series, opts){
+  const W=600,H=240,L=56,R=12,T=14,B=28; const n=series[0].data.length;
+  let min=Math.min(0,...series.flatMap(s=>s.data)), max=Math.max(...series.flatMap(s=>s.data)); if(max===min) max=min+1;
+  const x=i=>L+(W-L-R)*i/(n-1), y=v=>T+(H-T-B)*(1-(v-min)/(max-min));
+  let g=''; const ticks=5; for(let t=0;t<=ticks;t++){ const v=min+(max-min)*t/ticks; g+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="${cssVar('--grid')}"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end" font-size="10" fill="${cssVar('--muted')}">${fmtK(v)}</text>`; }
+  for(let i=0;i<n;i+=Math.ceil(n/12)){ g+=`<text x="${x(i)}" y="${H-8}" text-anchor="middle" font-size="10" fill="${cssVar('--muted')}">M${i+1}</text>`; }
+  if(min<0) g+=`<line x1="${L}" x2="${W-R}" y1="${y(0)}" y2="${y(0)}" stroke="${cssVar('--neg')}" stroke-dasharray="4 3"/>`;
+  series.forEach(s=>{ const d=s.data.map((v,i)=>`${i?'L':'M'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' '); g+=`<path d="${d}" fill="none" stroke="${s.color}" stroke-width="2.2"/>`; });
+  if(opts&&opts.marker){ const i=opts.marker.i; g+=`<circle cx="${x(i)}" cy="${y(series[0].data[i])}" r="4" fill="${cssVar('--neg')}"/><text x="${x(i)}" y="${y(series[0].data[i])-8}" text-anchor="middle" font-size="10" fill="${cssVar('--neg')}">${opts.marker.label}</text>`; }
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img">${g}</svg>`;
+}
+function stackedChart(el, series){
+  const W=600,H=240,L=56,R=12,T=14,B=28; const n=series[0].data.length;
+  const totals=series[0].data.map((_,i)=>series.reduce((a,s)=>a+s.data[i],0)); let max=Math.max(1,...totals);
+  const x=i=>L+(W-L-R)*i/n, bw=(W-L-R)/n*0.8, y=v=>T+(H-T-B)*(1-v/max);
+  let g=''; for(let t=0;t<=5;t++){ const v=max*t/5; g+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="${cssVar('--grid')}"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end" font-size="10" fill="${cssVar('--muted')}">${fmtK(v)}</text>`; }
+  for(let i=0;i<n;i++){ let base=0; series.forEach(s=>{ const v=s.data[i]; if(v>0){ g+=`<rect x="${x(i)+bw*0.1}" y="${y(base+v)}" width="${bw}" height="${Math.max(0,y(base)-y(base+v))}" fill="${s.color}"/>`; base+=v; } }); if(i%Math.ceil(n/12)===0) g+=`<text x="${x(i)+bw/2}" y="${H-8}" text-anchor="middle" font-size="10" fill="${cssVar('--muted')}">M${i+1}</text>`; }
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img">${g}</svg>`;
+}
+
+// ---------- render ----------
+function tile(k,v,cls){ return `<div class="tile"><div class="k">${k}</div><div class="v ${cls||''}">${v}</div></div>`; }
+function render(){
+  const r=simulate(P); const rows=r.rows; const m12=rows[Math.min(11,rows.length-1)], last=rows[rows.length-1];
+  const cac = r.cumPaid>0? r.cumAds/r.cumPaid : null;
+  document.getElementById('tiles').innerHTML=
+    tile('People working, month 12', Math.round(m12.working), m12.working>=30?'good':'bad') +
+    tile(`People working, month ${r.M}`, Math.round(last.working)) +
+    tile('Clients month 12 (SME / seats)', `${m12.sme.toFixed(1)} / ${m12.seats.toFixed(1)}`) +
+    tile('Agency USD/month, month 12', '$'+Math.round(m12.agencyUSD).toLocaleString()) +
+    tile('Cash low point', 'Tk '+Math.round(r.minCash).toLocaleString()+` (M${r.minCashMonth})`, r.minCash<0?'bad':'good') +
+    tile('Cash back above starting cash from', r.breakEven? 'Month '+r.breakEven : 'not reached', r.breakEven?'good':'bad') +
+    tile('Paid students, total', Math.round(r.cumPaid)) +
+    tile('Cost per paid student', cac? 'Tk '+Math.round(cac).toLocaleString():'—', cac&&cac>2500?'bad':'good') +
+    tile('Revenue year 1 (Tk)', fmtK(rows.slice(0,12).reduce((a,x)=>a+x.revenue,0))) +
+    tile(`Cash at month ${r.M}`, 'Tk '+Math.round(last.cash).toLocaleString(), last.cash<0?'bad':'good');
+  document.getElementById('gates').innerHTML='<tr><th>Gate</th><th>Test</th><th>Result</th><th>Detail</th></tr>'+r.gates.map(g=>`<tr><td>${g.stage}</td><td style="text-align:left">${g.test}</td><td class="${g.pass?'ok':'fail'}">${g.pass?'PASS':'FAIL'}</td><td style="text-align:left">${g.detail}</td></tr>`).join('');
+  const cashSeries=[{data:rows.map(x=>x.cash),color:cssVar('--cash')}];
+  lineChart(document.getElementById('chCash'), cashSeries, {marker:{i:Math.max(0,r.minCashMonth-1),label:'low '+fmtK(r.minCash)}});
+  stackedChart(document.getElementById('chRev'), [{data:rows.map(x=>x.acadRev),color:cssVar('--academy')},{data:rows.map(x=>x.agencyRev),color:cssVar('--agency')},{data:rows.map(x=>x.placementRev),color:cssVar('--placement')}]);
+  stackedChart(document.getElementById('chPeople'), [{data:rows.map(x=>x.juniorsStudents),color:cssVar('--agency')},{data:rows.map(x=>x.placed),color:cssVar('--placement')},{data:rows.map(x=>x.freelancing),color:cssVar('--academy')},{data:rows.map(x=>x.localJobs),color:cssVar('--muted')}]);
+  lineChart(document.getElementById('chClients'), [{data:rows.map(x=>x.sme),color:cssVar('--agency')},{data:rows.map(x=>x.seats),color:cssVar('--placement')}]);
+  // sensitivity
+  const base12=m12.working, baseLow=r.minCash, baseAg=m12.agencyUSD;
+  const labelOf={}; GROUPS.forEach(g=>g.keys.forEach(k=>labelOf[k[0]]=k[1]));
+  const sens=MC_KEYS.map(k=>{ const up=simulate(Object.assign({},P,{[k]:P[k]*1.2})), dn=simulate(Object.assign({},P,{[k]:P[k]*0.8})); const u=up.rows[Math.min(11,up.rows.length-1)], d=dn.rows[Math.min(11,dn.rows.length-1)]; return {k, label:labelOf[k], wUp:u.working-base12, wDn:d.working-base12, cUp:up.minCash-baseLow, cDn:dn.minCash-baseLow, aUp:u.agencyUSD-baseAg, aDn:d.agencyUSD-baseAg, swing:Math.abs(u.working-d.working)}; }).sort((a,b)=>b.swing-a.swing);
+  const sg=v=>(v>=0?'+':'')+Math.round(v).toLocaleString();
+  document.getElementById('sens').innerHTML='<tr><th>Assumption</th><th>Working M12 at +20%</th><th>at −20%</th><th>Cash low at +20%</th><th>at −20%</th><th>Agency $ M12 at +20%</th><th>at −20%</th></tr>'+
+    sens.map(s=>`<tr><td>${s.label}</td><td>${sg(s.wUp)}</td><td>${sg(s.wDn)}</td><td>${sg(s.cUp)}</td><td>${sg(s.cDn)}</td><td>${sg(s.aUp)}</td><td>${sg(s.aDn)}</td></tr>`).join('');
+  document.getElementById('batches').innerHTML='<tr><th>Batch</th><th>Enrol month</th><th>Registrations</th><th>Test takers</th><th>Passers</th><th>Paid</th><th>Fee revenue</th><th>CAC</th><th>Finishers</th><th>Phase 2</th><th>Phase 2 done</th></tr>'+
+    r.batches.map(b=>`<tr><td>${b.n}</td><td>${b.month}</td><td>${Math.round(b.regs)}</td><td>${Math.round(b.testers)}</td><td>${Math.round(b.passers)}</td><td>${b.paid.toFixed(1)}</td><td>${Math.round(b.rev).toLocaleString()}</td><td>${b.cac?Math.round(b.cac).toLocaleString():'—'}</td><td>${b.finishers.toFixed(1)}</td><td>${b.p2.toFixed(1)}</td><td>${b.p2Done.toFixed(1)}</td></tr>`).join('');
+  document.getElementById('ledger').innerHTML='<tr><th>Month</th><th>Academy rev</th><th>Agency rev</th><th>Placement</th><th>Ads</th><th>Instructor+tools</th><th>Staff</th><th>Founders+fixed</th><th>Net</th><th>Cash</th><th>SME</th><th>Seats</th><th>Juniors (stu/ext)</th><th>Firms</th><th>Working</th></tr>'+
+    rows.map(x=>`<tr><td>M${x.m}</td><td>${Math.round(x.acadRev).toLocaleString()}</td><td>${Math.round(x.agencyRev).toLocaleString()}</td><td>${Math.round(x.placementRev).toLocaleString()}</td><td>${Math.round(x.ads).toLocaleString()}</td><td>${Math.round(x.acadCost).toLocaleString()}</td><td>${Math.round(x.staffCost).toLocaleString()}</td><td>${Math.round(x.founderDraw+x.fixed).toLocaleString()}</td><td style="color:${x.net<0?'var(--neg)':'var(--cash)'}">${Math.round(x.net).toLocaleString()}</td><td style="color:${x.cash<0?'var(--neg)':'inherit'}">${Math.round(x.cash).toLocaleString()}</td><td>${x.sme.toFixed(1)}</td><td>${x.seats.toFixed(1)}</td><td>${x.juniorsStudents.toFixed(0)}/${x.juniorsExternal.toFixed(0)}</td><td>${x.firms.toFixed(1)}</td><td>${x.working.toFixed(0)}</td></tr>`).join('');
+}
+
+// ---------- Monte Carlo ----------
+const MC_KEYS=['costPerReg','organicRegs','organicGrowth','regToTest','passRate','payRate','finishRate','smeRate','smeRampRate','smeRev','smeChurn','contactsPerClient','seatsPerClient','seatPrice','seatChurn','freelanceP2','freelanceP1','localJob','firmsPerQuarter','hiresPerFirm','instrRate','juniorPay'];
+function runMC(){
+  const runs=Math.max(50,Math.min(3000,parseInt(document.getElementById('mcRuns').value)||400));
+  const spread=Math.max(0.05,Math.min(0.8,(parseFloat(document.getElementById('mcSpread').value)||30)/100));
+  const res=[];
+  for(let i=0;i<runs;i++){
+    const q=Object.assign({},P);
+    MC_KEYS.forEach(k=>{ q[k]=P[k]*(1+(Math.random()*2-1)*spread); });
+    const r=simulate(q); const m12=r.rows[Math.min(11,r.rows.length-1)];
+    res.push({w12:m12.working, cash12:m12.cash, minCash:r.minCash, be:r.breakEven, agency12:m12.agencyUSD, wEnd:r.rows[r.rows.length-1].working});
+  }
+  const q=(arr,p)=>{const s=[...arr].sort((a,b)=>a-b); return s[Math.min(s.length-1,Math.floor(p*s.length))];};
+  const pr=(f)=>(100*res.filter(f).length/res.length).toFixed(0)+'%';
+  const w=res.map(x=>x.w12), mc=res.map(x=>x.minCash);
+  document.getElementById('mcOut').innerHTML=
+   `runs ${runs}, spread ±${Math.round(spread*100)}% on ${MC_KEYS.length} rates<br>`+
+   `P(≥30 people working by month 12): <b>${pr(x=>x.w12>=30)}</b> · P(≥10 by month 12): <b>${pr(x=>x.w12>=10)}</b><br>`+
+   `People working month 12: p10 ${q(w,0.1).toFixed(0)} · median ${q(w,0.5).toFixed(0)} · p90 ${q(w,0.9).toFixed(0)}<br>`+
+   `P(cash never below 0): <b>${pr(x=>x.minCash>=0)}</b> · cash low point: p10 Tk ${Math.round(q(mc,0.1)).toLocaleString()} · median Tk ${Math.round(q(mc,0.5)).toLocaleString()}<br>`+
+   `P(break-even within 12 months): <b>${pr(x=>x.be&&x.be<=12)}</b> · P(agency ≥ $3,500/month at month 12): <b>${pr(x=>x.agency12>=3500)}</b>`;
+  // histogram of people working m12
+  const bins=12, max=Math.max(1,...w), counts=new Array(bins).fill(0); w.forEach(v=>counts[Math.min(bins-1,Math.floor(v/max*bins))]++);
+  const W=600,H=160,L=36,B=24; let g=''; const cm=Math.max(...counts);
+  counts.forEach((c,i)=>{ const x=L+(W-L-10)*i/bins, bw=(W-L-10)/bins*0.85, h=(H-B-8)*c/cm; g+=`<rect x="${x}" y="${H-B-h}" width="${bw}" height="${h}" fill="${cssVar('--agency')}"/><text x="${x+bw/2}" y="${H-8}" text-anchor="middle" font-size="10" fill="${cssVar('--muted')}">${Math.round(max*i/bins)}</text>`; });
+  g+=`<line x1="${L+(W-L-10)*Math.min(1,30/max)}" x2="${L+(W-L-10)*Math.min(1,30/max)}" y1="4" y2="${H-B}" stroke="${cssVar('--neg')}" stroke-dasharray="4 3"/><text x="${L+(W-L-10)*Math.min(1,30/max)+4}" y="14" font-size="10" fill="${cssVar('--neg')}">target 30</text>`;
+  document.getElementById('chMC').innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img">${g}</svg><div class="small">Distribution of "people working at month 12" across runs.</div>`;
+}
+
+// ---------- wiring ----------
+buildInputs();
+try{ const s=localStorage.getItem('sim-scenario'); if(s){ P=Object.assign({},DEFAULTS,JSON.parse(s)); syncInputs(); } }catch(e){}
+document.getElementById('btnSave').onclick=()=>{ try{localStorage.setItem('sim-scenario',JSON.stringify(P)); alert('Saved in this browser.');}catch(e){ alert('Could not save in this browser.'); } };
+document.getElementById('btnReset').onclick=()=>{ P=Object.assign({},DEFAULTS); syncInputs(); render(); };
+document.getElementById('btnExport').onclick=()=>{ const t=JSON.stringify(P,null,1); if(navigator.clipboard) navigator.clipboard.writeText(t).then(()=>alert('Scenario JSON copied.')); else prompt('Copy:',t); };
+document.getElementById('btnMC').onclick=runMC;
+document.getElementById('btnTheme').onclick=()=>{ const r=document.documentElement; const dark=r.getAttribute('data-theme')==='dark'||(!r.getAttribute('data-theme')&&matchMedia('(prefers-color-scheme: dark)').matches); r.setAttribute('data-theme',dark?'light':'dark'); try{localStorage.setItem('theme',dark?'light':'dark')}catch(e){} render(); };
+try{ const t=localStorage.getItem('theme'); if(t) document.documentElement.setAttribute('data-theme',t); }catch(e){}
+render();
+})();
+</script>
+</body>
+</html>
